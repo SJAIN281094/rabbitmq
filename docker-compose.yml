@@ -1,31 +1,61 @@
 version: "3.9"
 
 services:
-
   rabbitmq:
-    image: rabbitmq:3.13-management
+    build: .
     container_name: rabbitmq
     hostname: rabbitmq
     restart: always
 
     ports:
-      - "5672:5672"     # AMQP
-      - "15672:15672"   # Management UI
-      - "15692:15692"   # Prometheus metrics
+      - "5672:5672"
+      - "127.0.0.1:15672:15672"
+      - "127.0.0.1:15692:15692"
 
     environment:
-      RABBITMQ_DEFAULT_USER: admin
-      RABBITMQ_DEFAULT_PASS: admin
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+      RABBITMQ_DEFAULT_VHOST: /
+      RABBITMQ_VM_MEMORY_HIGH_WATERMARK: 0.6
+      RABBITMQ_DISK_FREE_LIMIT: 512MiB
+      RABBITMQ_LOG_LEVELS: connection=warning,channel=warning
+      RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: >-
+        +S 2:2
+        +sbwt very_short
+        +sbwtdcpu very_short
+        +sbwtdio very_short
 
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
 
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "1.0"
+        reservations:
+          memory: 256M
+          cpus: "0.25"
+
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
-      interval: 30s
+      interval: 15s
       timeout: 10s
       retries: 5
+      start_period: 30s
 
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    security_opt:
+      - no-new-privileges:true
+
+    sysctls:
+      net.core.somaxconn: "1024"
 
 volumes:
   rabbitmq_data:
+    driver: local
