@@ -1,0 +1,74 @@
+{
+  "TaskTemplate": {
+    "ContainerSpec": {
+      "Healthcheck": {
+        "Test": ["CMD", "rabbitmq-diagnostics", "-q", "ping"],
+        "Interval": 15000000000,
+        "Timeout": 10000000000,
+        "Retries": 5,
+        "StartPeriod": 30000000000
+      },
+      "Mounts": [
+        {
+          "Type": "volume",
+          "Source": "rabbitmq-data",
+          "Target": "/var/lib/rabbitmq",
+          "VolumeOptions": {
+            "DriverConfig": {
+              "Name": "local"
+            }
+          }
+        }
+      ]
+    },
+    "Resources": {
+      "Limits": {
+        "MemoryBytes": 1073741824,
+        "NanoCPUs": 1000000000
+      },
+      "Reservations": {
+        "MemoryBytes": 268435456,
+        "NanoCPUs": 250000000
+      }
+    },
+    "LogDriver": {
+      "Name": "json-file",
+      "Options": {
+        "max-size": "10m",
+        "max-file": "3"
+      }
+    },
+    "RestartPolicy": {
+      "Condition": "any",
+      "Delay": 5000000000,
+      "MaxAttempts": 5
+    }
+  },
+  "Mode": {
+    "Replicated": {
+      "Replicas": 1
+    }
+  },
+  "EndpointSpec": {
+    "Ports": [
+      {
+        "Protocol": "tcp",
+        "TargetPort": 5672,
+        "PublishedPort": 5672,
+        "PublishMode": "host"
+      },
+      {
+        "Protocol": "tcp",
+        "TargetPort": 15672,
+        "PublishedPort": 15672,
+        "PublishMode": "host"
+      },
+      {
+        "Protocol": "tcp",
+        "TargetPort": 15692,
+        "PublishedPort": 15692,
+        "PublishMode": "host"
+      }
+    ]
+  }
+}
